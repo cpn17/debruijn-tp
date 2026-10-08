@@ -1,0 +1,11 @@
+name: debruijn
+channels:
+  - defaults
+dependencies:
+  - python=3.11
+  - networkx
+  - matplotlib
+  - pytest-cov
+  - pytest
+  - pylint
+prefix: /home/caop/miniconda3/envs/debruijn
