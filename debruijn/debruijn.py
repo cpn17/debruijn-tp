@@ -289,7 +289,7 @@ def get_contigs(
                     sequence = path[0]
                     for node in path[1:]:
                         sequence += node[-1]
-                    contigs.append((sequence, len(sequence)))
+                    contigs.append([sequence, len(sequence)])
     return contigs
 
 def save_contigs(contigs_list: List[str], output_file: Path) -> None:
@@ -298,7 +298,10 @@ def save_contigs(contigs_list: List[str], output_file: Path) -> None:
     :param contig_list: (list) List of [contiguous sequence and their length]
     :param output_file: (Path) Path to the output file
     """
-    pass
+    with open(output_file, "w") as file:
+        for i, [contig, contig_len] in enumerate(contigs_list):
+            file.write(f">contig_{i} len={contig_len}\n")
+            file.write(textwrap.fill(contig, width=80)+"\n")
 
 
 def draw_graph(graph: DiGraph, graphimg_file: Path) -> None:  # pragma: no cover
@@ -336,6 +339,7 @@ def main() -> None:  # pragma: no cover
     args = get_arguments()
     fastq = args.fastq_file
     kmer_size = args.kmer_size
+    output_file = args.output_file
     reads = list(read_fastq(fastq))
     for i, read in enumerate(reads):
         print(f"Read {i}")
@@ -351,7 +355,8 @@ def main() -> None:  # pragma: no cover
     print(starting_nodes)
     ending_nodes = get_sink_nodes(graph)
     print(ending_nodes)
-    print(get_contigs(graph, starting_nodes, ending_nodes))
+    contigs_list = get_contigs(graph, starting_nodes, ending_nodes)
+    save_contigs(contigs_list, output_file)
     # Fonctions de dessin du graphe
     # A decommenter si vous souhaitez visualiser un petit
     # graphe
