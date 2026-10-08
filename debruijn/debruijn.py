@@ -39,7 +39,7 @@ from typing import Iterator, Dict, List
 
 matplotlib.use("Agg")
 
-__author__ = "Your Name"
+__author__ = "CAO"
 __copyright__ = "Universite Paris Diderot"
 __credits__ = ["Your Name"]
 __license__ = "GPL"
@@ -102,7 +102,13 @@ def read_fastq(fastq_file: Path) -> Iterator[str]:
     :param fastq_file: (Path) Path to the fastq file.
     :return: A generator object that iterate the read sequences.
     """
-    pass
+    with open(fastq_file, "r") as fastq : 
+        for read in fastq: 
+            sequence = next(fastq).strip()
+            next(fastq)
+            next(fastq)
+            yield sequence
+            
 
 
 def cut_kmer(read: str, kmer_size: int) -> Iterator[str]:
