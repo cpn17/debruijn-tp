@@ -126,8 +126,13 @@ def build_kmer_dict(fastq_file: Path, kmer_size: int) -> Dict[str, int]:
     :param fastq_file: (str) Path to the fastq file.
     :return: A dictionnary object that identify all kmer occurrences.
     """
-    pass
-
+    reads = list(read_fastq(fastq_file))
+    kmer_dict = {} 
+    for read in reads:
+        kmers = list(cut_kmer(read, kmer_size))
+        for kmer in kmers:
+            kmer_dict[kmer] = kmer_dict.get(kmer, 0) + 1 
+    return kmer_dict
 
 def build_graph(kmer_dict: Dict[str, int]) -> DiGraph:
     """Build the debruijn graph
@@ -305,10 +310,15 @@ def main() -> None:  # pragma: no cover
     fastq = args.fastq_file
     kmer_size = args.kmer_size
     reads = list(read_fastq(fastq))
-    for read in reads:
+    for i, read in enumerate(reads):
+        print(f"Read {i}")
         kmers = list(cut_kmer(read, kmer_size))
-        print(kmers)
+        #print(kmers)
         print(len(kmers))
+
+    kmer_dict = build_kmer_dict(fastq, kmer_size)
+    print(kmer_dict)
+    print(len(kmer_dict))
 
     # Fonctions de dessin du graphe
     # A decommenter si vous souhaitez visualiser un petit
