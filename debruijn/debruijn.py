@@ -15,8 +15,10 @@
 
 import argparse
 import os
+from sre_constants import SUCCESS
 import sys
 from pathlib import Path
+import networkx as nx
 from networkx import (
     DiGraph,
     all_simple_paths,
@@ -140,8 +142,12 @@ def build_graph(kmer_dict: Dict[str, int]) -> DiGraph:
     :param kmer_dict: A dictionnary object that identify all kmer occurrences.
     :return: A directed graph (nx) of all kmer substring and weight (occurrence).
     """
-    pass
-
+    graph = nx.DiGraph()
+    for kmer, occurence in kmer_dict.items():
+        prefix = kmer[:-1]
+        suffix = kmer[1:]
+        graph.add_edge(prefix, suffix, weight = occurence)
+    return graph
 
 def remove_paths(
     graph: DiGraph,
@@ -240,8 +246,14 @@ def get_starting_nodes(graph: DiGraph) -> List[str]:
     :param graph: (nx.DiGraph) A directed graph object
     :return: (list) A list of all nodes without predecessors
     """
-    pass
+    starting_nodes = []
+    nodes = graph.nodes()
+    for node in nodes:
+        predecessors = list(graph.predecessors(node))
+        if not predecessors:
+            starting_nodes.append(node)
 
+    return starting_nodes
 
 def get_sink_nodes(graph: DiGraph) -> List[str]:
     """Get nodes without successors
@@ -249,7 +261,13 @@ def get_sink_nodes(graph: DiGraph) -> List[str]:
     :param graph: (nx.DiGraph) A directed graph object
     :return: (list) A list of all nodes without successors
     """
-    pass
+    nodes = graph.nodes()
+    sink_nodes = []
+    for node in nodes:
+        successors = list(graph.successors(node))
+        if not successors:
+            sink_nodes.append(node)
+    return sink_nodes
 
 
 def get_contigs(
@@ -262,8 +280,17 @@ def get_contigs(
     :param ending_nodes: (list) A list of nodes without successors
     :return: (list) List of [contiguous sequence and their length]
     """
-    pass
-
+    contigs = []
+    for starting_node in starting_nodes:
+        for ending_node in ending_nodes:
+            if nx.has_path(graph, starting_node, ending_node):
+                paths = list(nx.all_simple_paths(graph, starting_node, ending_node))
+                for path in paths:
+                    sequence = path[0]
+                    for node in path[1:]:
+                        sequence += node[-1]
+                    contigs.append((sequence, len(sequence)))
+    return contigs
 
 def save_contigs(contigs_list: List[str], output_file: Path) -> None:
     """Write all contigs in fasta format
@@ -315,11 +342,16 @@ def main() -> None:  # pragma: no cover
         kmers = list(cut_kmer(read, kmer_size))
         #print(kmers)
         print(len(kmers))
-
     kmer_dict = build_kmer_dict(fastq, kmer_size)
     print(kmer_dict)
     print(len(kmer_dict))
-
+    graph = build_graph(kmer_dict)
+    #draw_graph(graph)
+    starting_nodes = get_starting_nodes(graph)
+    print(starting_nodes)
+    ending_nodes = get_sink_nodes(graph)
+    print(ending_nodes)
+    print(get_contigs(graph, starting_nodes, ending_nodes))
     # Fonctions de dessin du graphe
     # A decommenter si vous souhaitez visualiser un petit
     # graphe
