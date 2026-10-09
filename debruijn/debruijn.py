@@ -290,36 +290,35 @@ def solve_entry_tips(graph: DiGraph, starting_nodes: List[str]) -> DiGraph:
     :return: (nx.DiGraph) A directed graph object
     """
     for node in graph.nodes():
+        if graph.in_degree(node) > 1:
+            connected_starts = []
+            for starting_node in starting_nodes:
+                if (starting_node in graph and starting_node != node and nx.has_path(graph, starting_node, node)):
+                    connected_starts.append(starting_node)
 
-        connected_starts = []
+            if len(connected_starts) > 1:
+                print("Pointe potentielle détectée :", node)
 
-        for starting_node in starting_nodes:
-            if (starting_node in graph and starting_node != node and nx.has_path(graph, starting_node, node)):
-                connected_starts.append(starting_node)
+                paths = []
+                path_length = []
+                weight_avg_list = []
 
-        if len(connected_starts) > 1:
-            print("Pointe potentielle détectée :", node)
+                for starting_node in connected_starts:
+                    for path in nx.all_simple_paths(graph, starting_node, node):
+                        paths.append(path)
 
-            paths = []
-            path_length = []
-            weight_avg_list = []
+                for path in paths:
+                    path_length.append(len(path))
+                    weight_avg_list.append(path_average_weight(graph, path))
 
-            for starting_node in connected_starts:
-                for path in nx.all_simple_paths(graph, starting_node, node):
-                    paths.append(path)
+                graph = select_best_path(graph, paths, path_length, weight_avg_list, delete_entry_node=True, delete_sink_node=False)
 
-            for path in paths:
-                path_length.append(len(path))
-                weight_avg_list.append(path_average_weight(graph, path))
+                new_starting_nodes = []
 
-            graph = select_best_path(graph, paths, path_length, weight_avg_list, delete_entry_node=True, delete_sink_node=False)
-
-            new_starting_nodes = []
-
-            for start in starting_nodes:
-                if start in graph:
-                    new_starting_nodes.append(start)
-            return solve_entry_tips(graph, new_starting_nodes)
+                for start in starting_nodes:
+                    if start in graph:
+                        new_starting_nodes.append(start)
+                return solve_entry_tips(graph, new_starting_nodes)
 
     return graph
 
@@ -330,7 +329,38 @@ def solve_out_tips(graph: DiGraph, ending_nodes: List[str]) -> DiGraph:
     :param ending_nodes: (list) A list of ending nodes
     :return: (nx.DiGraph) A directed graph object
     """
-    pass
+    for node in graph.nodes():
+        if graph.out_degree(node) > 1:
+            connected_ends = []
+            for ending_node in ending_nodes:
+                if (ending_node in graph and ending_node != node and nx.has_path(graph, node, ending_node)):
+                    connected_ends.append(ending_node)
+
+            if len(connected_ends) > 1:
+                paths = []
+                path_length = []
+                weight_avg_list = []
+
+                for ending_node in connected_ends:
+                    for path in nx.all_simple_paths(graph, node, ending_node):
+                        paths.append(path)
+
+                for path in paths:
+                    path_length.append(len(path))
+                    weight_avg_list.append(path_average_weight(graph, path))
+
+                graph = select_best_path(graph, paths, path_length, weight_avg_list, 
+                                        delete_entry_node=False, delete_sink_node=True)
+
+                new_ending_nodes = []
+
+                for end in ending_nodes:
+                    if end in graph:
+                        new_ending_nodes.append(end)
+
+                return solve_out_tips(graph, new_ending_nodes)
+
+    return graph
 
 
 def get_starting_nodes(graph: DiGraph) -> List[str]:
