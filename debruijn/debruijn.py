@@ -196,28 +196,17 @@ def select_best_path(
     :param delete_sink_node: (boolean) True->We remove the last node of a path
     :return: (nx.DiGraph) A directed graph object
     """
-    # poids moyen maximal
-    max_weight = max(weight_avg_list)
+    if statistics.stdev(weight_avg_list) > 0:
+        # les poids moyens sont différents
+        best_path_index = weight_avg_list.index(max(weight_avg_list))
 
-    max_weight_index = []
-    for i, weight in enumerate(weight_avg_list): 
-        if weight == max_weight:
-            max_weight_index.append(i)
+    elif statistics.stdev(path_length) > 0:
+        # mêmes poids, longueurs différentes
+        best_path_index = path_length.index(max(path_length))
 
-    # longueur maximal parmi les path ayant des plus grands poids
-    max_weight_length = []
-    for index in max_weight_index:
-        max_weight_length.append(path_length[index])
-
-    max_length =  max(max_weight_length)
-
-    best_path_indexes = []
-    for index in max_weight_index:
-        if path_length[index] == max_length:
-            best_path_indexes.append(index)
-
-    # si plusieurs best_path_index, choisir au hasard
-    best_path_index = random.choice(best_path_indexes)
+    else:
+        # mêmes poids et mêmes longueurs
+        best_path_index = randint(0, len(path_list) - 1)
 
     # path à supprimer
     paths_to_remove = []
@@ -250,7 +239,9 @@ def solve_bubble(graph: DiGraph, ancestor_node: str, descendant_node: str) -> Di
     :param descendant_node: (str) A downstream node in the graph
     :return: (nx.DiGraph) A directed graph object
     """
-    pass
+    
+
+
 
 
 def simplify_bubbles(graph: DiGraph) -> DiGraph:
