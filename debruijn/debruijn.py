@@ -119,7 +119,7 @@ def cut_kmer(read: str, kmer_size: int) -> Iterator[str]:
     :return: A generator object that provides the kmers (str) of size kmer_size.
     """
     for i in range(len(read) - kmer_size + 1):
-        yield read[i:i+kmer_size]
+        yield read[i : i + kmer_size]
 
 
 def build_kmer_dict(fastq_file: Path, kmer_size: int) -> Dict[str, int]:
@@ -129,12 +129,13 @@ def build_kmer_dict(fastq_file: Path, kmer_size: int) -> Dict[str, int]:
     :return: A dictionnary object that identify all kmer occurrences.
     """
     reads = list(read_fastq(fastq_file))
-    kmer_dict = {} 
+    kmer_dict = {}
     for read in reads:
         kmers = list(cut_kmer(read, kmer_size))
         for kmer in kmers:
-            kmer_dict[kmer] = kmer_dict.get(kmer, 0) + 1 
+            kmer_dict[kmer] = kmer_dict.get(kmer, 0) + 1
     return kmer_dict
+
 
 def build_graph(kmer_dict: Dict[str, int]) -> DiGraph:
     """Build the debruijn graph
@@ -146,8 +147,9 @@ def build_graph(kmer_dict: Dict[str, int]) -> DiGraph:
     for kmer, occurence in kmer_dict.items():
         prefix = kmer[:-1]
         suffix = kmer[1:]
-        graph.add_edge(prefix, suffix, weight = occurence)
+        graph.add_edge(prefix, suffix, weight=occurence)
     return graph
+
 
 def remove_paths(
     graph: DiGraph,
@@ -164,7 +166,16 @@ def remove_paths(
     :param delete_sink_node: (boolean) True->We remove the last node of a path
     :return: (nx.DiGraph) A directed graph object
     """
-    pass
+    for path in path_list:
+        if delete_entry_node and delete_sink_node :
+            graph.remove_nodes_from(path)
+        elif delete_entry_node :
+            graph.remove_nodes_from(path[:-1])
+        elif delete_sink_node :
+            graph.remove_nodes_from(path[1:])
+        else:
+            graph.remove_nodes_from(path[1:-1])
+    return graph
 
 
 def select_best_path(
@@ -255,6 +266,7 @@ def get_starting_nodes(graph: DiGraph) -> List[str]:
 
     return starting_nodes
 
+
 def get_sink_nodes(graph: DiGraph) -> List[str]:
     """Get nodes without successors
 
@@ -292,6 +304,7 @@ def get_contigs(
                     contigs.append([sequence, len(sequence)])
     return contigs
 
+
 def save_contigs(contigs_list: List[str], output_file: Path) -> None:
     """Write all contigs in fasta format
 
@@ -301,7 +314,7 @@ def save_contigs(contigs_list: List[str], output_file: Path) -> None:
     with open(output_file, "w") as file:
         for i, [contig, contig_len] in enumerate(contigs_list):
             file.write(f">contig_{i} len={contig_len}\n")
-            file.write(textwrap.fill(contig, width=80)+"\n")
+            file.write(textwrap.fill(contig, width=80) + "\n")
 
 
 def draw_graph(graph: DiGraph, graphimg_file: Path) -> None:  # pragma: no cover
@@ -344,13 +357,13 @@ def main() -> None:  # pragma: no cover
     for i, read in enumerate(reads):
         print(f"Read {i}")
         kmers = list(cut_kmer(read, kmer_size))
-        #print(kmers)
+        # print(kmers)
         print(len(kmers))
     kmer_dict = build_kmer_dict(fastq, kmer_size)
     print(kmer_dict)
     print(len(kmer_dict))
     graph = build_graph(kmer_dict)
-    #draw_graph(graph)
+    # draw_graph(graph)
     starting_nodes = get_starting_nodes(graph)
     print(starting_nodes)
     ending_nodes = get_sink_nodes(graph)
