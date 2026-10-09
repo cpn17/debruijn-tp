@@ -470,18 +470,39 @@ def main() -> None:  # pragma: no cover
         print(f"Read {i}")
         kmers = list(cut_kmer(read, kmer_size))
         # print(kmers)
-        print(len(kmers))
+        # print(len(kmers))
+
+    # kmer dict
     kmer_dict = build_kmer_dict(fastq, kmer_size)
-    print(kmer_dict)
-    print(len(kmer_dict))
+    #print(kmer_dict)
+    
+    # construire graph
     graph = build_graph(kmer_dict)
-    # draw_graph(graph)
+
+    # resoudre les bulles
+    graph = simplify_bubbles(graph)
+
+    # resoudre starting nodes
     starting_nodes = get_starting_nodes(graph)
-    print(starting_nodes)
+    #print(starting_nodes)
+    graph = solve_entry_tips(graph, starting_nodes)
+
+    # resoudre ending nodes
     ending_nodes = get_sink_nodes(graph)
-    print(ending_nodes)
+    #print(ending_nodes)
+    graph = solve_out_tips(graph, ending_nodes)
+
+    # update starting and ending_nodes
+    starting_nodes = get_starting_nodes(graph)
+    ending_nodes = get_sink_nodes(graph)
+
+    # contigs
     contigs_list = get_contigs(graph, starting_nodes, ending_nodes)
+
+    # save contigs to file fasta
     save_contigs(contigs_list, output_file)
+    print(f"Nombre de contigs : {len(contigs_list)}")
+
     # Fonctions de dessin du graphe
     # A decommenter si vous souhaitez visualiser un petit
     # graphe
