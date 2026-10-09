@@ -208,7 +208,7 @@ def select_best_path(
         # mêmes poids et mêmes longueurs
         best_path_index = randint(0, len(path_list) - 1)
 
-    # path à supprimer
+    # paths à supprimer
     paths_to_remove = []
     for i, path in enumerate(path_list):
         if i != best_path_index:
@@ -239,10 +239,24 @@ def solve_bubble(graph: DiGraph, ancestor_node: str, descendant_node: str) -> Di
     :param descendant_node: (str) A downstream node in the graph
     :return: (nx.DiGraph) A directed graph object
     """
-    
+    paths = list(nx.all_simple_paths(graph, ancestor_node, descendant_node))
 
+    # longueurs des paths
+    path_length = []
+    for path in paths:
+        path_length.append(len(path))
 
+    # poids moyens des paths
+    weight_avg_list = []
+    for path in paths:
+        weight_avg_list.append(path_average_weight(graph, path))
 
+    # selectionner le meilleur chemin
+    graph = select_best_path(graph, paths, path_length, weight_avg_list,
+                             delete_entry_node=False,
+                             delete_sink_node=False,)
+
+    return graph
 
 def simplify_bubbles(graph: DiGraph) -> DiGraph:
     """Detect and explode bubbles
