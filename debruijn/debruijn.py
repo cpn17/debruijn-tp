@@ -289,8 +289,39 @@ def solve_entry_tips(graph: DiGraph, starting_nodes: List[str]) -> DiGraph:
     :param starting_nodes: (list) A list of starting nodes
     :return: (nx.DiGraph) A directed graph object
     """
-    pass
+    for node in graph.nodes():
 
+        connected_starts = []
+
+        for starting_node in starting_nodes:
+            if (starting_node in graph and starting_node != node and nx.has_path(graph, starting_node, node)):
+                connected_starts.append(starting_node)
+
+        if len(connected_starts) > 1:
+            print("Pointe potentielle détectée :", node)
+
+            paths = []
+            path_length = []
+            weight_avg_list = []
+
+            for starting_node in connected_starts:
+                for path in nx.all_simple_paths(graph, starting_node, node):
+                    paths.append(path)
+
+            for path in paths:
+                path_length.append(len(path))
+                weight_avg_list.append(path_average_weight(graph, path))
+
+            graph = select_best_path(graph, paths, path_length, weight_avg_list, delete_entry_node=True, delete_sink_node=False)
+
+            new_starting_nodes = []
+
+            for start in starting_nodes:
+                if start in graph:
+                    new_starting_nodes.append(start)
+            return solve_entry_tips(graph, new_starting_nodes)
+
+    return graph
 
 def solve_out_tips(graph: DiGraph, ending_nodes: List[str]) -> DiGraph:
     """Remove out tips
